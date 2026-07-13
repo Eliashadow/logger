@@ -9,6 +9,8 @@ A lightweight, high-performance, and thread-safe logging utility for Python. It 
 * **Automatic Cleanup**: Built-in rotation policy to delete logs older than a specified number of days.
 * **Structured Levels**: Supports `DEBUG`, `INFO`, `WARNING`, and `ERROR` levels with color-coded terminal output.
 * **Exception Tracking**: Automatically captures and logs full stack traces during exceptions.
+* **Performance Timing**: Includes a Timer context manager to easily measure and log the execution time of code blocks.
+* **Dynamic Location Tracking:** Automatically logs the `filename`, `line number`, and `function name` where the log was triggered.
 
 ## Installation
 
@@ -28,28 +30,40 @@ from logger import Logger
 
 # Initialize with desired configuration
 # Using the 'with' statement ensures the file closes automatically
-with Logger(colors=True, frame=60, version='full', save=True) as log:
+with Logger(min_level=LogLevel.DEBUG_P, colors=True, frame=60, version='test_advance', save=True) as log:
+        with Timer(log, "Heavy Data Processing"):
+            time.sleep(1.5)
 
-    log.info("System health check initiated...")
-    
-    # Example of a debug message (only shows if version='full' or debug mode is True)
-    log.debug("Initializing background worker components.")
+            log.info("System health check initiated...")
+            
+            # Example of a debug message (only shows if version='test' or 'test_advance'  or debug mode is True)
+            log.debug("Initializing background worker components.")
+            log.debug_p("Initializing background worker components. but more detailed message")
+            try:
+                log.warning("Attempting to access restricted database...")
+                data = 100 / 0
+                
+            except Exception as e:
+                # This logs the specific error + captures the full traceback automatically
+                log.error(f"Critical failure occurred: {e}")
 
-    try:
-        # Simulate a dangerous operation
-        log.warning("Attempting to access restricted database...")
-        data = 100 / 0
+            log.info("Process execution completed.")
         
-    except Exception as e:
-        # This logs the specific error + captures the full traceback automatically
-        log.error(f"Critical failure occurred: {e}")
-
-    log.info("Process execution completed.")
 
 # The log file is automatically closed here
 
 ```
 ![Logger Terminal Output](code.png)
+
+### Custom Formatting
+
+You can define your own log structure using available keys: `timestamp`, `location`, `function`, `message`, and `prefix`.
+
+```python
+# Format: "Time: 12:00:00 | Function: main | MSG: Hello!"
+custom_logger = Logger(log_format="Time: {timestamp} | Function: {function} | MSG: {message}")
+
+```
 
 ## Configuration
 
@@ -63,6 +77,7 @@ You can customize the logger behavior during initialization:
 | `save` | `False` | When `True`, saves logs to a timestamped file. |
 | `min_level` | `0` | Minimum severity level required to print/log. |
 | `days` | `7` | Duration to keep logs before auto-cleanup. |
+| `log_format` | `'[{timestamp}] [{location}] {message}'` | Custom template for log structure. |
 
 ## License
 
